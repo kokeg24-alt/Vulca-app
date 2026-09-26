@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#12181b">
+  <title>VulcaApp Pro — Suite Técnica de Campo</title>
+  
+  <!-- Librería jsPDF para generación real de PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <style>
+    :root {
+      --bg: #0f1416;
+      --card-bg: #1a2327;
+      --accent: #00e676;
+      --accent-dim: rgba(0, 230, 118, 0.15);
+      --danger: #ff5252;
+      --danger-dim: rgba(255, 82, 82, 0.15);
+      --text: #ffffff;
+      --subtext: #b0bec5;
+      --border: #2c3b42;
+      --wa-color: #25D366;
+      --pdf-color: #ff9800;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 12px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 500px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+
+    h2 {
+      margin: 0 0 12px 0;
+      font-size: 1.1rem;
+      color: var(--accent);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .form-group {
+      margin-bottom: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    label {
+      font-size: 0.8rem;
+      color: var(--subtext);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    input, select {
+      background-color: #0d1113;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: #fff;
+      padding: 12px;
+      font-size: 1rem;
+      outline: none;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--accent);
+    }
+
+    button {
+      background-color: var(--accent);
+      color: #000;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      padding: 14px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 6px;
+    }
+
+    .results-panel {
+      margin-top: 14px;
+      padding: 14px;
+      background-color: #12181b;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 8px;
+    }
+
+    .kpi-card {
+      background-color: #1a2327;
+      padding: 10px;
+      border-radius: 6px;
+      border-left: 3px solid var(--accent);
+    }
+
+    .kpi-card .label {
+      font-size: 0.75rem;
+      color: var(--subtext);
+    }
+
+    .kpi-card .val {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #fff;
+      margin-top: 2px;
+    }
+
+    .badge-status {
+      padding: 10px;
+      border-radius: 6px;
+      font-weight: bold;
+      text-align: center;
+      font-size: 0.85rem;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-status.ok {
+      background-color: var(--accent-dim);
+      color: var(--accent);
+      border: 1px solid var(--accent);
+    }
+
+    .badge-status.fail {
+      background-color: var(--danger-dim);
+      color: var(--danger);
+      border: 1px solid var(--danger);
+    }
+
+    .action-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .btn-wa {
+      background-color: #1b382b;
+      color: var(--wa-color);
+      border: 1px solid var(--wa-color);
+      padding: 10px;
+      font-size: 0.85rem;
+    }
+
+    .btn-pdf {
+      background-color: #382c1b;
+      color: var(--pdf-color);
+      border: 1px solid var(--pdf-color);
+      padding: 10px;
+      font-size: 0.85rem;
+    }
+
+    .btn-clear {
+      background-color: transparent;
+      color: var(--danger);
+      border: 1px solid var(--danger);
+      padding: 8px;
+      margin-top: 6px;
+    }
+
+    .norma-tag {
+      font-size: 0.7rem;
+      color: var(--subtext);
+      font-style: italic;
+      text-align: right;
+    }
+
+    canvas {
+      background-color: #0d1113;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      width: 100%;
+      max-height: 320px;
+      object-fit: contain;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- IDENTIFICACIÓN DE SERVICIO -->
+  <div class="card">
+    <h2>📌 Identificación del Servicio</h2>
+    <div class="form-group">
+      <label>Tag de Transportador / Equipo</label>
+      <input type="text" id="tagEquipo" placeholder="Ej: TR-102-A">
+    </div>
+    <div class="form-group">
+      <label>Nombre del Técnico / Inspector</label>
+      <input type="text" id="nombreTecnico" placeholder="Ej: Juan Pérez">
+    </div>
+  </div>
+
+  <!-- MÓDULO 1: PUNTO DE ROCÍO -->
+  <div class="card">
+    <h2>💧 Punto de Rocío (ABNT NBR 15391)</h2>
+    <div class="form-group">
+      <label>Temp. Ambiente (°C)</label>
+      <input type="text" inputmode="decimal" id="tempAmb" value="25">
+    </div>
+    <div class="form-group">
+      <label>Humedad Relativa (%)</label>
+      <input type="text" inputmode="decimal" id="humedad" value="70">
+    </div>
+    <div class="form-group">
+      <label>Temp. Superficie Correa (°C)</label>
+      <input type="text" inputmode="decimal" id="tempSup" value="22">
+    </div>
+    <button onclick="calcularRocio()">Verificar Punto de Rocío</button>
+
+    <div id="resRocio" class="results-panel" style="display:none;">
+      <div id="badgeRocio" class="badge-status"></div>
+      <div class="kpi-grid">
+        <div class="kpi-card"><div class="label">Punto de Rocío</div><div class="val"><span id="valTdp">-</span> °C</div></div>
+        <div class="kpi-card"><div class="label">Temp. Mín. Requerida</div><div class="val"><span id="valTmin">-</span> °C</div></div>
+      </div>
+      <div class="norma-tag">Criterio: Temp. Sup. &ge; Punto Rocío + 5°C</div>
+      <div class="action-buttons">
+        <button class="btn-wa" onclick="compartirWhatsApp('Punto de Rocío')">📲 WhatsApp</button>
+        <button class="btn-pdf" onclick="descargarPDF('Punto de Rocío')">📄 Laudo PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MÓDULO 2: PLANO TÉCNICO DE EMPALME TEXTIL (EP) -->
+  <div class="card">
+    <h2>🧵 Plano de Empalme Textil / EP (Estilo Manual)</h2>
+    <div class="form-group">
+      <label>Número de Lonas</label>
+      <input type="number" id="numLonas" value="5" min="2" oninput="calcularEmpalmeTextil()">
+    </div>
+    <div class="form-group">
+      <label>Paso / Escalón - D (mm)</label>
+      <input type="text" inputmode="decimal" id="pasoMM" value="250" oninput="calcularEmpalmeTextil()">
+    </div>
+    <div class="form-group">
+      <label>Ancho Correa - C (mm)</label>
+      <input type="text" inputmode="decimal" id="anchoMM" value="1000" oninput="calcularEmpalmeTextil()">
+    </div>
+    <div class="form-group">
+      <label>Espesor Cubierta Sup./Inf. (mm)</label>
+      <input type="text" inputmode="decimal" id="espesorCubiertas" value="8" oninput="calcularEmpalmeTextil()">
+    </div>
+    
+    <div style="margin-top: 10px;">
+      <label>Plano de Escalones, Sesgo y Tabla de Cotas</label>
+      <canvas id="canvasEmpalmeTextil" width="450" height="280"></canvas>
+    </div>
+
+    <div id="resEmpalme" class="results-panel">
+      <div class="kpi-grid">
+        <div class="kpi-card"><div class="label">Longitud Total (A)</div><div class="val"><span id="valLemp">-</span> mm</div></div>
+        <div class="kpi-card"><div class="label">Pestaña / Bisel (B/E)</div><div class="val"><span id="valLb">-</span> mm</div></div>
+        <div class="kpi-card"><div class="label">Tiempo Plancha</div><div class="val" style="color:var(--accent)"><span id="valTiempoEP">-</span> min</div></div>
+        <div class="kpi-card"><div class="label">Presión</div><div class="val">100 PSI</div></div>
+      </div>
+      <div class="norma-tag">Norma: DIN 22110 / Estándar ContiTech</div>
+      <div class="action-buttons">
+        <button class="btn-wa" onclick="compartirWhatsApp('Empalme Textil')">📲 WhatsApp</button>
+        <button class="btn-pdf" onclick="descargarPDF('Empalme Textil')">📄 Laudo PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MÓDULO 3: PLANO TÉCNICO DE EMPALME ST (ESTILO DUNLOP) -->
+  <div class="card">
+    <h2>⚙️ Plano Técnico ST (Estilo Dunlop - 1, 2, 3 Step)</h2>
+    <div class="form-group">
+      <label>Clase de Correa ST</label>
+      <select id="selectST" onchange="cargarDatosST(); calcularEmpalmeST();">
+        <option value="ST1000">ST 1000 (1 Step / 1 Paso)</option>
+        <option value="ST1600">ST 1600 (2 Step / 2 Pasos)</option>
+        <option value="ST2500">ST 2500 (3 Step / 3 Pasos)</option>
+        <option value="ST3150">ST 3150 (3 Step / 3 Pasos)</option>
+        <option value="ST5000">ST 5000 (4 Step / 4 Pasos)</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Diámetro Cable - d (mm)</label>
+      <input type="text" inputmode="decimal" id="diamCableMM" value="5.6" oninput="calcularEmpalmeST()">
+    </div>
+    <div class="form-group">
+      <label>Cantidad Total de Cables</label>
+      <input type="number" id="cantCables" value="55" min="5" oninput="calcularEmpalmeST()">
+    </div>
+    <div class="form-group">
+      <label>Ancho Correa (mm)</label>
+      <input type="text" inputmode="decimal" id="anchoStMM" value="1200" oninput="calcularEmpalmeST()">
+    </div>
+    <div class="form-group">
+      <label>Espesor Total Correa / Cubiertas (mm)</label>
+      <input type="text" inputmode="decimal" id="espesorCorreaTotal" value="18" oninput="calcularEmpalmeST()">
+    </div>
+
+    <div style="margin-top: 10px;">
+      <label>Plano Din de Distribución de Cables y Tabla de Cotas</label>
+      <canvas id="canvasEmpalmeST" width="450" height="300"></canvas>
+    </div>
+
+    <div id="resST" class="results-panel">
+      <div class="kpi-grid">
+        <div class="kpi-card"><div class="label">Paso Transv. (Pitch)</div><div class="val"><span id="valPitch">-</span> mm</div></div>
+        <div class="kpi-card"><div class="label">Longitud Anclaje (lv)</div><div class="val"><span id="valStLv">-</span> mm</div></div>
+        <div class="kpi-card"><div class="label">Longitud Total (ls)</div><div class="val"><span id="valStLs">-</span> mm</div></div>
+        <div class="kpi-card"><div class="label">Tiempo Plancha</div><div class="val" style="color:var(--accent)"><span id="valTiempoVulca">-</span> min</div></div>
+      </div>
+      <div class="norma-tag">Norma: DIN 22131 / Estándar Dunlop</div>
+      <div class="action-buttons">
+        <button class="btn-wa" onclick="compartirWhatsApp('Empalme ST')">📲 WhatsApp</button>
+        <button class="btn-pdf" onclick="descargarPDF('Empalme ST')">📄 Laudo PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MÓDULO 4: CÁLCULO DE PESO E IZAJE -->
+  <div class="card">
+    <h2>⚖️ Cálculo de Peso e Izaje de Correa / Bobina</h2>
+    <div class="form-group">
+      <label>Tipo de Construcción</label>
+      <select id="tipoPesoCorrea" onchange="calcularPesoCorrea()">
+        <option value="textil">Correa Textil (EP / Multi-lonas)</option>
+        <option value="st">Correa de Cable de Acero (ST)</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Ancho de la Correa (mm)</label>
+      <input type="text" inputmode="decimal" id="pesoAnchoMM" value="1000" oninput="calcularPesoCorrea()">
+    </div>
+    <div class="form-group">
+      <label>Espesor Total de la Correa (mm)</label>
+      <input type="text" inputmode="decimal" id="pesoEspesorMM" value="16" oninput="calcularPesoCorrea()">
+    </div>
+    <div class="form-group">
+      <label>Longitud del Tramo / Rollo (m)</label>
+      <input type="text" inputmode="decimal" id="pesoLongM" value="120" oninput="calcularPesoCorrea()">
+    </div>
+
+    <div id="resPeso" class="results-panel">
+      <div class="kpi-grid">
+        <div class="kpi-card"><div class="label">Peso Lineal</div><div class="val"><span id="valPesoLineal">-</span> kg/m</div></div>
+        <div class="kpi-card"><div class="label">Peso Total del Tramo</div><div class="val" style="color:var(--accent)"><span id="valPesoTotal">-</span> kg</div></div>
+      </div>
+      <div class="norma-tag">Estimación basada en densidad técnica DIN 22101</div>
+      <div class="action-buttons">
+        <button class="btn-wa" onclick="compartirWhatsApp('Peso e Izaje')">📲 WhatsApp</button>
+        <button class="btn-pdf" onclick="descargarPDF('Peso e Izaje')">📄 Laudo PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MÓDULO 5: DIÁMETRO MÍNIMO DE POLEA -->
+  <div class="card">
+    <h2>📐 Cálculo de Diámetro Mínimo de Polea</h2>
+    <div class="form-group">
+      <label>Tipo de Construcción</label>
+      <select id="tipoCorreaPolea" onchange="calcularDiametroPolea()">
+        <option value="textil">Correa Textil (Multi-lonas)</option>
+        <option value="st">Correa de Cable de Acero (ST)</option>
+      </select>
+    </div>
+    <div class="form-group" id="grupoParametroPolea">
+      <label id="labelParametroPolea">Espesor Total de Correa (mm)</label>
+      <input type="text" inputmode="decimal" id="parametroPolea" value="18" oninput="calcularDiametroPolea()">
+    </div>
+    <div class="form-group">
+      <label>Condición de Trabajo / Posición de Polea</label>
+      <select id="condicionPolea" onchange="calcularDiametroPolea()">
+        <option value="motriz">Tambor Motriz / Alta Tensión (100%)</option>
+        <option value="reencauso">Tambor de Reencauso / Inversión (80-90%)</option>
+        <option value="tensor">Tambor Tensor / Cola (75%)</option>
+      </select>
+    </div>
+
+    <div id="resPolea" class="results-panel">
+      <div class="kpi-grid">
+        <div class="kpi-card"><div class="label">Diámetro Mín. Recomendado</div><div class="val"><span id="valDiamPoleaMM">-</span> mm</div></div>
+        <div class="kpi-card"><div class="label">Equivalente en Metros</div><div class="val"><span id="valDiamPoleaM">-</span> m</div></div>
+      </div>
+      <div class="norma-tag" id="normaPoleaTag">Basado en prácticas recomendadas DIN / ISO</div>
+      <div class="action-buttons">
+        <button class="btn-wa" onclick="compartirWhatsApp('Diámetro Polea')">📲 WhatsApp</button>
+        <button class="btn-pdf" onclick="descargarPDF('Diámetro Polea')">📄 Laudo PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MÓDULO 6: PROYECTAR CARRETE NUEVO -->
+  <div class="card">
+    <h2>🌀 Proyectar Bobina en Carrete Nuevo</h2>
+    <div class="form-group">
+      <label>Diámetro Núcleo/Tambor - d (m)</label>
+      <input type="text" inputmode="decimal" id="diamTamborM" value="0.60" oninput="calcularDesarrolloCarrete()">
+    </div>
+    <div class="form-group">
+      <label>Espesor Correa (mm)</label>
+      <input type="text" inputmode="decimal" id="espCorreaMM" value="18" oninput="calcularDesarrolloCarrete()">
+    </div>
+    <div class="form-group">
+      <label>Longitud Correa - L (m)</label>
+      <input type="text" inputmode="decimal" id="longDeseadaM" value="250" oninput="calcularDesarrolloCarrete()">
+    </div>
+    <div class="form-group">
+      <label>Límite Carrete - D_max (m)</label>
+      <input type="text" inputmode="decimal" id="limiteCarreteM" value="2.40" oninput="calcularDesarrolloCarrete()">
+    </div>
+
+    <div style="text-align: center; margin: 12px 0;">
+      <canvas id="canvasCarrete" width="280" height="280" style="max-height: 280px;"></canvas>
+    </div>
+
+    <div id="resCarrete" class="results-panel">
+      <div id="badgeCarrete" class="badge-status"></div>
+      <div class="kpi-grid">
+        <div class="kpi-card"><div class="label">Diámetro Final (D)</div><div class="val"><span id="valDiamFinal">-</span> m</div></div>
+        <div class="kpi-card"><div class="label">Vueltas Totales</div><div class="val"><span id="valVueltas">-</span></div></div>
+        <div class="kpi-card"><div class="label">Espesor Rollo</div><div class="val"><span id="valRadioRollo">-</span> cm</div></div>
+      </div>
+      <div class="action-buttons">
+        <button class="btn-wa" onclick="compartirWhatsApp('Desarrollo de Carrete')">📲 WhatsApp</button>
+        <button class="btn-pdf" onclick="descargarPDF('Desarrollo de Carrete')">📄 Laudo PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MÓDULO 7: CÁLCULO DE CORREA YA ENROLLADA -->
+  <div class="card">
+    <h2>📦 Calcular Longitud de Rollo Ya Enrollado</h2>
+    <div class="form-group">
+      <label>Diámetro Exterior Actual - D_ext (m)</label>
+      <input type="text" inputmode="decimal" id="rollExtM" value="1.50" oninput="calcularRolloExistente()">
+    </div>
+    <div class="form-group">
+      <label>Diámetro del Núcleo / Eje - d_int (m)</label>
+      <input type="text" inputmode="decimal" id="rollIntM" value="0.60" oninput="calcularRolloExistente()">
+    </div>
+    <div class="form-group">
+      <label>Espesor de la Correa (mm)</label>
+      <input type="text" inputmode="decimal" id="rollEspMM" value="15" oninput="calcularRolloExistente()">
+    </div>
+
+    <div id="resRolloExistente" class="results-panel">
+      <div class="kpi-grid">
+        <div class="kpi-card"><div class="label">Longitud Estimada</div><div class="val"><span id="valRollMetros">-</span> m</div></div>
+        <div class="kpi-card"><div class="label">Vueltas en Rollo</div><div class="val"><span id="valRollVueltas">-</span></div></div>
+      </div>
+      <div class="norma-tag">Cálculo por Espiral de Arquímedes</div>
+      <div class="action-buttons">
+        <button class="btn-wa" onclick="compartirWhatsApp('Rollo Enrollado')">📲 WhatsApp</button>
+        <button class="btn-pdf" onclick="descargarPDF('Rollo Enrollado')">📄 Laudo PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FIRMA DIGITAL -->
+  <div class="card">
+    <h2>✍️ Firma Digital del Responsable</h2>
+    <canvas id="padFirma" width="300" height="120" style="max-height: 120px;"></canvas>
+    <button class="btn-clear" onclick="limpiarFirma()">Borrar Firma</button>
+  </div>
+
+</div>
+
+<script>
+  function parseVal(id) {
+    const el = document.getElementById(id);
+    if (!el) return 0;
+    let val = el.value.toString().replace(',', '.');
+    return parseFloat(val) || 0;
+  }
+
+  // FIRMA DIGITAL
+  const canvasFirma = document.getElementById('padFirma');
+  const ctxFirma = canvasFirma ? canvasFirma.getContext('2d') : null;
+  let dibujando = false;
+
+  function obtenerPosicion(e) {
+    const rect = canvasFirma.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x: clientX - rect.left, y: clientY - rect.top };
+  }
+
+  function iniciarDibujo(e) {
+    if (!ctxFirma) return;
+    dibujando = true;
+    const pos = obtenerPosicion(e);
+    ctxFirma.beginPath();
+    ctxFirma.moveTo(pos.x, pos.y);
+  }
+
+  function dibujar(e) {
+    if (!dibujando || !ctxFirma) return;
+    const pos = obtenerPosicion(e);
+    ctxFirma.lineTo(pos.x, pos.y);
+    ctxFirma.strokeStyle = "#fff";
+    ctxFirma.lineWidth = 2;
+    ctxFirma.stroke();
+  }
+
+  function detenerDibujo() { dibujando = false; }
+  function limpiarFirma() { if(ctxFirma) ctxFirma.clearRect(0, 0, canvasFirma.width, canvasFirma.height); }
+
+  if(canvasFirma) {
+    canvasFirma.addEventListener('mousedown', iniciarDibujo);
+    canvasFirma.addEventListener('mousemove', dibujar);
+    canvasFirma.addEventListener('mouseup', detenerDibujo);
+    canvasFirma.addEventListener('touchstart', iniciarDibujo);
+    canvasFirma.addEventListener('touchmove', dibujar);
+    canvasFirma.addEventListener('touchend', detenerDibujo);
+  }
+
+  // MÓDULO ROCÍO
+  let dataRocio = {};
+  function calcularRocio() {
+    const T = parseVal('tempAmb');
+    const RH = parseVal('humedad');
+    const Tsup = parseVal('tempSup');
+    const a = 17.27, b = 237.7;
+    const alpha = ((a * T) / (b + T)) + Math.log(RH / 100);
+    const Tdp = (b * alpha) / (a - alpha);
+    const Tmin = Tdp + 5.0;
+    const cumple = Tsup >= Tmin;
+
+    dataRocio = { T, RH, Tsup, Tdp: Tdp.toFixed(1), Tmin: Tmin.toFixed(1), cumple };
+    document.getElementById('valTdp').innerText = dataRocio.Tdp;
+    document.getElementById('valTmin').innerText = dataRocio.Tmin;
+    const badge = document.getElementById('badgeRocio');
+    badge.innerText = cumple ? "✓ CUMPLE - APLICACIÓN PERMITIDA" : "✕ NO CUMPLE - RIESGO DE FALLA";
+    badge.className = cumple ? "badge-status ok" : "badge-status fail";
+    document.getElementById('resRocio').style.display = 'flex';
+  }
+
+  // MÓDULO EMPALME TEXTIL (EP)
+  let dataEmpalme = {};
+  function calcularEmpalmeTextil() {
+    const numLonas = parseInt(document.getElementById('numLonas').value) || 0;
+    const pasoMM = parseVal('pasoMM');
+    const anchoMM = parseVal('anchoMM');
+    const espCubiertas = parseVal('espesorCubiertas');
+    
+    const rad = (22 * Math.PI) / 180;
+    const pestanaSesgoMM = anchoMM * Math.tan(rad);
+    const longitudEmpalmeMM = (numLonas - 1) * pasoMM + (2 * pestanaSesgoMM);
+    const areaM2 = (anchoMM / 1000) * (longitudEmpalmeMM / 1000);
+    const tiempoEP = Math.round(25 + (espCubiertas * 2) + (numLonas * 3));
+
+    dataEmpalme = { 
+      numLonas, pasoMM, anchoMM, espCubiertas, 
+      Lemp: longitudEmpalmeMM.toFixed(1), 
+      Lb: pestanaSesgoMM.toFixed(1), 
+      area: areaM2.toFixed(3),
+      tiempoEP 
+    };
+
+    document.getElementById('valLemp').innerText = dataEmpalme.Lemp;
+    document.getElementById('valLb').innerText = dataEmpalme.Lb;
+    document.getElementById('valArea').innerText = dataEmpalme.area;
+    document.getElementById('valTiempoEP').innerText = dataEmpalme.tiempoEP;
+
+    dibujarPlanoEmpalmeEstiloContinental(numLonas, pasoMM, pestanaSesgoMM);
+  }
+
+  function dibujarPlanoEmpalmeEstiloContinental(lonas, paso, bisel) {
+    const cvs = document.getElementById('canvasEmpalmeTextil');
+    if (!cvs) return;
+    const ctx = cvs.getContext('2d');
+    ctx.clearRect(0, 0, cvs.width, cvs.height);
+
+    const startX = 20;
+    const startY = 15;
+    const maxW = 410;
+    const hLona = 14;
+
+    ctx.fillStyle = '#2c3b42';
+    ctx.fillRect(startX, startY, maxW, 8);
+    ctx.fillRect(startX, startY + 12 + (lonas * hLona), maxW, 8);
+
+    ctx.fillStyle = '#00ff88';
+    ctx.font = 'bold 9px sans-serif';
+    ctx.fillText("CUBIERTA SUPERIOR", startX + 5, startY + 6);
+    ctx.fillText("CUBIERTA INFERIOR", startX + 5, startY + 20 + (lonas * hLona));
+
+    for (let i = 0; i < lonas; i++) {
+      let y = startY + 10 + (i * hLona);
+      let wLona = maxW - (i * 35);
+      ctx.fillStyle = i % 2 === 0 ? 'rgba(0, 230, 118, 0.2)' : 'rgba(0, 230, 118, 0.08)';
+      ctx.fillRect(startX + (i * 18), y, wLona - (i * 18), hLona - 2);
+      ctx.strokeStyle = '#00e676';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(startX + (i * 18), y, wLona - (i * 18), hLona - 2);
+    }
+
+    ctx.strokeStyle = '#ff9800';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath();
+    ctx.moveTo(startX + 40, startY);
+    ctx.lineTo(startX + 75, startY + 22 + (lonas * hLona));
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    let tableY = 200;
+    ctx.strokeStyle = '#555';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(startX, tableY, maxW, 55);
+    ctx.strokeRect(startX, tableY + 20, maxW, 35);
+
+    let colW = maxW / 5;
+    for (let c = 1; c < 5; c++) {
+      ctx.beginPath();
+      ctx.moveTo(startX + (c * colW), tableY);
+      ctx.lineTo(startX + (c * colW), tableY + 55);
+      ctx.stroke();
+    }
+
+    ctx.fillStyle = '#00e676';
+    ctx.font = 'bold 9px sans-serif';
+    let headers = ["A (Largo Tot)", "B (Pestaña)", "C (Ancho)", "D (Paso)", "E (Bisel)"];
+    headers.forEach((h, idx) => {
+      ctx.fillText(h, startX + 5 + (idx * colW), tableY + 13);
+    });
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '10px sans-serif';
+    let valores = [
+      dataEmpalme.Lemp + " mm", 
+      dataEmpalme.Lb + " mm", 
+      dataEmpalme.anchoMM + " mm", 
+      dataEmpalme.pasoMM + " mm", 
+      dataEmpalme.Lb + " mm"
+    ];
+    valores.forEach((v, idx) => {
+      ctx.fillText(v, startX + 8 + (idx * colW), tableY + 42);
+    });
+  }
+
+  // MÓDULO EMPALME CABLE DE ACERO (ST) - ESTILO DUNLOP
+  const dbST = {
+    "ST1000": { lv: 350, d: 4.0, steps: 1 },
+    "ST1600": { lv: 450, d: 5.6, steps: 2 },
+    "ST2500": { lv: 650, d: 7.5, steps: 3 },
+    "ST3150": { lv: 750, d: 8.1, steps: 3 },
+    "ST5000": { lv: 1050, d: 10.8, steps: 4 }
+  };
+
+  function cargarDatosST() {
+    const clase = document.getElementById('selectST').value;
+    if (dbST[clase]) document.getElementById('diamCableMM').value = dbST[clase].d;
+  }
+
+  let dataST = {};
+  function calcularEmpalmeST() {
+    const clase = document.getElementById('selectST').value;
+    const d = parseVal('diamCableMM');
+    const cantCables = parseInt(document.getElementById('cantCables').value) || 1;
+    const anchoMM = parseVal('anchoStMM');
+    const espesorTotal = parseVal('espesorCorreaTotal');
+    const datos = dbST[clase] || { lv: 350, steps: 2 };
+    
+    const pitch = anchoMM / cantCables;
+    const rad = (22 * Math.PI) / 180;
+    const biselMM = anchoMM * Math.tan(rad);
+    const lsMM = datos.lv + (2 * biselMM);
+    const tiempoVulcanizado = Math.round(20 + (espesorTotal * 1.5));
+
+    dataST = { 
+      clase, d, cantCables, anchoMM, espesorTotal, 
+      pitch: pitch.toFixed(1), lv: datos.lv, ls: lsMM.toFixed(1), 
+      bisel: biselMM.toFixed(1), steps: datos.steps, tiempoVulcanizado 
+    };
+
+    document.getElementById('valPitch').innerText = dataST.pitch;
+    document.getElementById('valStLv').innerText = dataST.lv;
+    document.getElementById('valStLs').innerText = dataST.ls;
+    document.getElementById('valTiempoVulca').innerText = dataST.tiempoVulcanizado;
+
+    dibujarPlanoSTEstiloDunlop(datos.steps, datos.lv, biselMM, anchoMM, cantCables);
+  }
+
+  function dibujarPlanoSTEstiloDunlop(steps, lv, bisel, ancho, cables) {
+    const cvs = document.getElementById('canvasEmpalmeST');
+    if (!cvs) return;
+    const ctx = cvs.getContext('2d');
+    ctx.clearRect(0, 0, cvs.width, cvs.height);
+
+    const startX = 15;
+    const startY = 15;
+    const maxW = 420;
+
+    // Título del Layout
+    ctx.fillStyle = '#00e676';
+    ctx.font = 'bold 11px sans-serif';
+    ctx.fillText(`${steps} STEP SPLICE LAYOUT (DIN 22131)`, startX, startY + 10);
+
+    // Bloques laterales de la correa (Extremos)
+    ctx.fillStyle = '#2c3b42';
+    ctx.fillRect(startX, startY + 20, 70, 90);
+    ctx.fillRect(startX + maxW - 70, startY + 20, 70, 90);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '9px sans-serif';
+    ctx.fillText("CORREA", startX + 15, startY + 65);
+    ctx.fillText("CORREA", startX + maxW - 55, startY + 65);
+
+    // Zona central de hilos de acero escalonados en simetría
+    ctx.strokeStyle = '#00e676';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(startX + 70, startY + 20, maxW - 140, 90);
+
+    // Eje central E
+    ctx.strokeStyle = '#ff5252';
+    ctx.setLineDash([4, 2]);
+    ctx.beginPath();
+    ctx.moveTo(startX + (maxW / 2), startY + 15);
+    ctx.lineTo(startX + (maxW / 2), startY + 115);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = '#ff5252';
+    ctx.font = 'bold 9px sans-serif';
+    ctx.fillText("E", startX + (maxW / 2) - 3, startY + 25);
+
+    // Dibujar hilos escalonados representativos
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1;
+    for (let s = 0; s < steps; s++) {
+      let offset = s * 22;
+      ctx.beginPath();
+      ctx.moveTo(startX + 85 + offset, startY + 35 + (s * 18));
+      ctx.lineTo(startX + maxW - 85 - offset, startY + 35 + (s * 18));
+      ctx.stroke();
+    }
+
+    // --- TABLA DE COTAS INFERIOR ESTILO DUNLOP ---
+    let tableY = 180;
+    ctx.strokeStyle = '#555';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(startX, tableY, maxW, 60);
+    ctx.strokeRect(startX, tableY + 22, maxW, 38);
+
+    let colW = maxW / 5;
+    for (let c = 1; c < 5; c++) {
+      ctx.beginPath();
+      ctx.moveTo(startX + (c * colW), tableY);
+      ctx.lineTo(startX + (c * colW), tableY + 60);
+      ctx.stroke();
+    }
+
+    ctx.fillStyle = '#00e676';
+    ctx.font = 'bold 9px sans-serif';
+    let headers = ["ls (Largo Tot)", "lv (Anclaje)", "Step (Paso)", "Cables", "Bisel"];
+    headers.forEach((h, idx) => {
+      ctx.fillText(h, startX + 4 + (idx * colW), tableY + 14);
+    });
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '10px sans-serif';
+    let valores = [
+      dataST.ls + " mm", 
+      dataST.lv + " mm", 
+      (dataST.lv / steps).toFixed(0) + " mm", 
+      cables + " un", 
+      dataST.bisel + " mm"
+    ];
+    valores.forEach((v, idx) => {
+      ctx.fillText(v, startX + 6 + (idx * colW), tableY + 45);
+    });
+  }
+
+  // MÓDULO PESO E IZAJE
+  let dataPeso = {};
+  function calcularPesoCorrea() {
+    const tipo = document.getElementById('tipoPesoCorrea').value;
+    const anchoMM = parseVal('pesoAnchoMM');
+    const espesorMM = parseVal('pesoEspesorMM');
+    const longitudM = parseVal('pesoLongM');
+
+    let factorDensidad = tipo === 'st' ? 0.00135 : 0.0012; 
+    let pesoLineal = (anchoMM * espesorMM) * factorDensidad * (tipo === 'st' ? 1.15 : 1.0);
+    let pesoTotal = pesoLineal * longitudM;
+
+    dataPeso = { tipo, anchoMM, espesorMM, longitudM, lineal: pesoLineal.toFixed(2), total: pesoTotal.toFixed(1) };
+    document.getElementById('valPesoLineal').innerText = dataPeso.lineal;
+    document.getElementById('valPesoTotal').innerText = dataPeso.total;
+  }
+
+  // MÓDULO DIÁMETRO DE POLEA
+  let dataPolea = {};
+  function calcularDiametroPolea() {
+    const tipo = document.getElementById('tipoCorreaPolea').value;
+    const paramInput = document.getElementById('parametroPolea');
+    const labelParam = document.getElementById('labelParametroPolea');
+    const condicion = document.getElementById('condicionPolea').value;
+
+    let factor = 100;
+    if (tipo === 'textil') {
+      labelParam.innerText = "Espesor Total de Correa (mm)";
+      if (condicion === 'motriz') factor = 110;
+      else if (condicion === 'reencauso') factor = 90;
+      else factor = 80;
+    } else {
+      labelParam.innerText = "Diámetro de Cable - d (mm)";
+      if (condicion === 'motriz') factor = 125;
+      else if (condicion === 'reencauso') factor = 110;
+      else factor = 90;
+    }
+
+    const valorBase = parseVal('parametroPolea');
+    const diamMinMM = valorBase * factor;
+    const diamMinM = diamMinMM / 1000;
+
+    dataPolea = { tipo, valorBase, condicion, factor, diamMinMM: diamMinMM.toFixed(1), diamMinM: diamMinM.toFixed(2) };
+    document.getElementById('valDiamPoleaMM').innerText = dataPolea.diamMinMM;
+    document.getElementById('valDiamPoleaM').innerText = dataPolea.diamMinM;
+    document.getElementById('normaPoleaTag').innerText = tipo === 'textil' ? "Norma: DIN 22101 / 22110" : "Norma: DIN 22131 / ISO 15236";
+  }
+
+  // MÓDULO CARRETE NUEVO
+  let dataCarrete = {};
+  function calcularDesarrolloCarrete() {
+    const d = parseVal('diamTamborM');
+    const e = parseVal('espCorreaMM') / 1000;
+    const L = parseVal('longDeseadaM');
+    const Dmax = parseVal('limiteCarreteM');
+    if (e <= 0 || d <= 0) return;
+
+    const r = d / 2;
+    const R = Math.sqrt((e * L / Math.PI) + (r * r));
+    const D = R * 2;
+    const vueltas = (R - r) / e;
+    const espesorRollo = (R - r) * 100;
+    const excede = D > Dmax;
+
+    dataCarrete = { d, e: e*1000, L, Dmax, D: D.toFixed(2), vueltas: vueltas.toFixed(1), espesorRollo: espesorRollo.toFixed(1), excede };
+    document.getElementById('valDiamFinal').innerText = dataCarrete.D;
+    document.getElementById('valVueltas').innerText = dataCarrete.vueltas;
+    document.getElementById('valRadioRollo').innerText = dataCarrete.espesorRollo;
+
+    const badge = document.getElementById('badgeCarrete');
+    badge.innerText = excede ? "✕ EXCEDE DIÁMETRO MÁXIMO" : "✓ DENTRO DEL LÍMITE PERMITIDO";
+    badge.className = excede ? "badge-status fail" : "badge-status ok";
+    dibujarCarrete(r, R);
+  }
+
+  function dibujarCarrete(r, R) {
+    const canvasC = document.getElementById('canvasCarrete');
+    if (!canvasC) return;
+    const ctxC = canvasC.getContext('2d');
+    const cx = canvasC.width / 2;
+    const cy = canvasC.height / 2;
+    const scale = (canvasC.width / 2 - 20) / Math.max(R, 0.1);
+
+    ctxC.clearRect(0, 0, canvasC.width, canvasC.height);
+    ctxC.beginPath();
+    ctxC.arc(cx, cy, r * scale, 0, 2 * Math.PI);
+    ctxC.fillStyle = '#37474f';
+    ctxC.fill();
+    ctxC.strokeStyle = '#00e676';
+    ctxC.stroke();
+
+    ctxC.beginPath();
+    ctxC.arc(cx, cy, R * scale, 0, 2 * Math.PI);
+    ctxC.strokeStyle = '#00e676';
+    ctxC.lineWidth = 2;
+    ctxC.stroke();
+  }
+
+  // MÓDULO ROLLO ENROLLADO
+  let dataRolloExistente = {};
+  function calcularRolloExistente() {
+    const D_ext = parseVal('rollExtM');
+    const d_int = parseVal('rollIntM');
+    const e = parseVal('rollEspMM') / 1000;
+
+    if (e <= 0 || D_ext <= d_int) return;
+
+    const R = D_ext / 2;
+    const r = d_int / 2;
+    const L = (Math.PI / e) * ((R * R) - (r * r));
+    const vueltas = (R - r) / e;
+
+    dataRolloExistente = { D_ext, d_int, e: e*1000, metros: L.toFixed(1), vueltas: vueltas.toFixed(1) };
+    document.getElementById('valRollMetros').innerText = dataRolloExistente.metros;
+    document.getElementById('valRollVueltas').innerText = dataRolloExistente.vueltas;
+  }
+
+  // WHATSAPP
+  function compartirWhatsApp(modulo) {
+    const tag = document.getElementById('tagEquipo').value.trim() || 'SIN-TAG';
+    const tec = document.getElementById('nombreTecnico').value.trim() || 'No especificado';
+    let msg = `*REPORTE TÉCNICO VULCAAPP*\n📌 *Equipo:* ${tag}\n👷 *Técnico:* ${tec}\n------------------------------\n`;
+
+    if (modulo === 'Punto de Rocío') {
+      msg += `💧 *ROCÍO*\n• T.Amb: ${dataRocio.T}°C | HR: ${dataRocio.RH}%\n• T.Sup: ${dataRocio.Tsup}°C | Rocío: ${dataRocio.Tdp}°C\n• Estado: ${dataRocio.cumple ? '✅ CUMPLE' : '❌ NO CUMPLE'}\n`;
+    } else if (modulo === 'Empalme Textil') {
+      msg += `🧵 *EMPALME TEXTIL (EP)*\n• Lonas: ${dataEmpalme.numLonas} | Ancho: ${dataEmpalme.anchoMM}mm\n• Largo Total (A): ${dataEmpalme.Lemp} mm | Paso (D): ${dataEmpalme.pasoMM} mm\n• Tiempo Vulcanizado: ${dataEmpalme.tiempoEP} min\n`;
+    } else if (modulo === 'Empalme ST') {
+      msg += `⚙️ *EMPALME ST / ESTILO DUNLOP*\n• Clase: ${dataST.clase} (${dataST.steps} Step) | Cables: ${dataST.cantCables}\n• Longitud Anclaje (lv): ${dataST.lv} mm | Total (ls): ${dataST.ls} mm\n• Tiempo Vulcanizado: ${dataST.tiempoVulcanizado} min\n`;
+    } else if (modulo === 'Peso e Izaje') {
+      msg += `⚖️ *PESO E IZAJE DE CORREA*\n• Tipo: ${dataPeso.tipo.toUpperCase()} | Ancho: ${dataPeso.anchoMM}mm\n• Peso Lineal: ${dataPeso.lineal} kg/m | Total: ${dataPeso.total} kg\n`;
+    } else if (modulo === 'Diámetro Polea') {
+      msg += `📐 *DIÁMETRO MÍNIMO DE POLEA*\n• Tipo: ${dataPolea.tipo} | Diámetro Mínimo: ${dataPolea.diamMinMM} mm\n`;
+    } else if (modulo === 'Desarrollo de Carrete') {
+      msg += `🌀 *CARRETE NUEVO*\n• Meta: ${dataCarrete.L} m | Diámetro Final: ${dataCarrete.D} m\n`;
+    } else if (modulo === 'Rollo Enrollado') {
+      msg += `📦 *ROLLO EN TERRENO*\n• Longitud Estimada: ${dataRolloExistente.metros} m\n`;
+    }
+
+    const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
+    window.open(url, '_blank');
+  }
+
+  // PDF
+  function descargarPDF(modulo) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const tag = document.getElementById('tagEquipo').value.trim() || 'SIN-TAG';
+    const tec = document.getElementById('nombreTecnico').value.trim() || 'No especificado';
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.text("LAUDO TÉCNICO DE CAMPO", 20, 20);
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Equipo / Tag: ${tag}`, 20, 30);
+    doc.text(`Técnico Inspector: ${tec}`, 20, 36);
+    doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 20, 42);
+    doc.line(20, 46, 190, 46);
+
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text(`MÓDULO: ${modulo.toUpperCase()}`, 20, 56);
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+
+    let y = 66;
+    if (modulo === 'Punto de Rocío') {
+      doc.text(`Temperatura Ambiente: ${dataRocio.T} °C`, 20, y); y += 6;
+      doc.text(`Humedad Relativa: ${dataRocio.RH} %`, 20, y); y += 6;
+      doc.text(`Temperatura Superficie: ${dataRocio.Tsup} °C`, 20, y); y += 6;
+      doc.text(`Punto de Rocío: ${dataRocio.Tdp} °C`, 20, y); y += 6;
+      doc.text(`Resultado: ${dataRocio.cumple ? 'CUMPLE' : 'NO CUMPLE'}`, 20, y);
+    } else if (modulo === 'Empalme Textil') {
+      doc.text(`Número de Lonas: ${dataEmpalme.numLonas}`, 20, y); y += 6;
+      doc.text(`Longitud Total (A): ${dataEmpalme.Lemp} mm`, 20, y); y += 6;
+      doc.text(`Paso de Escalón (D): ${dataEmpalme.pasoMM} mm`, 20, y); y += 6;
+      doc.text(`Tiempo de Vulcanizado: ${dataEmpalme.tiempoEP} min`, 20, y);
+    } else if (modulo === 'Empalme ST') {
+      doc.text(`Clase Correa: ${dataST.clase} (${dataST.steps} Step)`, 20, y); y += 6;
+      doc.text(`Cantidad de Cables: ${dataST.cantCables}`, 20, y); y += 6;
+      doc.text(`Paso Transversal (Pitch): ${dataST.pitch} mm`, 20, y); y += 6;
+      doc.text(`Longitud Anclaje (lv): ${dataST.lv} mm`, 20, y); y += 6;
+      doc.text(`Longitud Total (ls): ${dataST.ls} mm`, 20, y); y += 6;
+      doc.text(`Tiempo de Vulcanizado: ${dataST.tiempoVulcanizado} min`, 20, y);
+    } else if (modulo === 'Peso e Izaje') {
+      doc.text(`Tipo de Correa: ${dataPeso.tipo.toUpperCase()}`, 20, y); y += 6;
+      doc.text(`Ancho: ${dataPeso.anchoMM} mm`, 20, y); y += 6;
+      doc.text(`Espesor Total: ${dataPeso.espesorMM} mm`, 20, y); y += 6;
+      doc.text(`Peso Lineal Estimado: ${dataPeso.lineal} kg/m`, 20, y); y += 6;
+      doc.text(`Peso Total para Izaje: ${dataPeso.total} kg`, 20, y);
+    } else if (modulo === 'Diámetro Polea') {
+      doc.text(`Tipo de Construcción: ${dataPolea.tipo}`, 20, y); y += 6;
+      doc.text(`Condición de Trabajo: ${dataPolea.condicion}`, 20, y); y += 6;
+      doc.text(`Diámetro Mínimo Recomendado: ${dataPolea.diamMinMM} mm (${dataPolea.diamMinM} m)`, 20, y);
+    } else if (modulo === 'Desarrollo de Carrete') {
+      doc.text(`Longitud Meta: ${dataCarrete.L} m`, 20, y); y += 6;
+      doc.text(`Diámetro Final: ${dataCarrete.D} m`, 20, y); y += 6;
+      doc.text(`Vueltas Totales: ${dataCarrete.vueltas}`, 20, y);
+    } else if (modulo === 'Rollo Enrollado') {
+      doc.text(`Diámetro Exterior: ${dataRolloExistente.D_ext} m`, 20, y); y += 6;
+      doc.text(`Diámetro Núcleo: ${dataRolloExistente.d_int} m`, 20, y); y += 6;
+      doc.text(`Longitud Estimada: ${dataRolloExistente.metros} m`, 20, y);
+    }
+
+    if (canvasFirma) {
+      const imgData = canvasFirma.toDataURL('image/png');
+      doc.text("Firma de Conformidad:", 20, 150);
+      doc.addImage(imgData, 'PNG', 20, 155, 60, 25);
+    }
+
+    doc.save(`Laudo_${tag}_${modulo}.pdf`);
+  }
+
+  window.onload = function() {
+    calcularEmpalmeTextil();
+    calcularEmpalmeST();
+    calcularPesoCorrea();
+    calcularDiametroPolea();
+    calcularDesarrolloCarrete();
+    calcularRolloExistente();
+  };
+</script>
+
+</body>
+</html>
